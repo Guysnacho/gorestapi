@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 
@@ -21,16 +22,26 @@ type Author struct {
 }
 
 //Init books var as a slice Book struct
-var books Book
+var books []Book
 
 //Get All Books
 func getBooks(w http.ResponseWriter, r *http.Request) {
-
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(books)
 }
 
 //Get A Books
 func getBook(w http.ResponseWriter, r *http.Request) {
-
+	w.Header().Set("Content-Type", "application/json")
+	params := mux.Vars(r) //Get Parameters
+	// loop through books and find with id
+	for _, item := range books {
+		if item.ID == params["id"] {
+			json.NewEncoder(w).Encode(item)
+			return
+		}
+	}
+	json.NewEncoder(w).Encode(&Book{})
 }
 
 //Create A Book
@@ -57,7 +68,10 @@ func main() {
 	//Init Router
 	r := mux.NewRouter()
 
-	//Mock Data
+	//Mock Data - @todo - implement DB
+	books = append(books, Book{ID: "1", Isbn: "448835", Title: "Book One", Author: &Author{Firstname: "John", Lastname: "Doe"}})
+
+	books = append(books, Book{ID: "2", Isbn: "325578", Title: "Book Two", Author: &Author{Firstname: "Mick", Lastname: "Jenkins"}})
 
 	//Router Handlers / Endpoints
 	r.HandleFunc("/api/books", getBooks).Methods("GET")
